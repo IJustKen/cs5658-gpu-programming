@@ -47,13 +47,25 @@ int main() {
 
         std::cout << "--- Device " << i << ": " << prop.name << " ---" << std::endl;
         std::cout << "  Compute Capability:          " << prop.major << "." << prop.minor << std::endl;
-        std::cout << "  Total Global Memory:         " << prop.totalGlobalMem / (1024 * 1024) << " MB" << std::endl;
+        std::cout << "  Total Global Memory:         " << prop.totalGlobalMem / (1024 * 1024) << " MB" << std::endl;    // this comes in Bytes so we divide by 1024*1024
         std::cout << "  Streaming Multiprocessors:   " << prop.multiProcessorCount << std::endl;
         std::cout << "  Cores Per SM:                " << getCoresPerSM(prop.major, prop.minor) << std::endl;
         std::cout << "  Total Cores:                 " << prop.multiProcessorCount*getCoresPerSM(prop.major, prop.minor) << std::endl;
         std::cout << "  Max Threads Per Block:       " << prop.maxThreadsPerBlock << std::endl;
         std::cout << "  Shared Memory Per Block :     " << prop.sharedMemPerBlock / 1024 << " KB" << std::endl;
         std::cout << "  Warp Size:                   " << prop.warpSize << std::endl;
+
+        // HERE are the new ones I found on the CUDA runtime API documentation under the Data Structures, in cudaDeviceProp
+        // I am only printing out a few more that I could make sense of based on the classes so far since there are way too many in total
+
+        std::cout << "  Concurrent Kernels:          " << prop.concurrentKernels << std:endl;
+        std::cout << "  Global L1 Cache Support (1 True, 0 False):     " << prop.globalL1CacheSupported << std:endl;
+        std::cout << "  Local L1 Cache Support (1 True, 0 False):      " << prop.localL1CacheSupported << std:endl;
+        std::cout << "  L2 Cache Size:               " << prop.l2CacheSize / (1024*1024) << "MB" << std:endl;
+        std::cout << "  Registers per Block:         " << prop.regsPerBlock << std:endl;
+        std::cout << "  Registers per MultiProcessor:" << prop.regsPerMultiprocessor << std:endl;
+
+        // End of new properties additions, I hope this much is satisfactory :((
         std::cout << std::endl;
     }
 
