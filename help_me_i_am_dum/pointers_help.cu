@@ -29,14 +29,19 @@ int main(){
         // do a malloc on GPU, ie, cudaMalloc which returns a GPU address, and put it into the pointer variable "head"
         // head -- the pointer variable containing a GPU address, living on the CPU
         // *head -- the struct node living on GPU
-        if(cudaMalloc(&head,sizeof(struct node))!=cudaSuccess) printf("error allocating head");
+        if(cudaMalloc(&head, sizeof(struct node))!=cudaSuccess) printf("error allocating head");
 
-        // 
-        cudaMemcpy(&temp, head,sizeof(struct node),cudaMemcpyDeviceToHost);
+        // Copy contents of where the head pointer points, to contents of where the temp pointer points
+        // Essentially the uninitialized dist and xx pointers from the previous cudaMalloc step, 
+        // are copied to the temp struct's dist and xx pointer variables
+        cudaMemcpy(&temp, head, sizeof(struct node),cudaMemcpyDeviceToHost);        // Now temp struct (on CPU), contains dist and xx which point to random GPU memory
   
-        //allocte dist and xx field of head on devide/GPU. 
-if(cudaMalloc(&(temp.dist),sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
-if(cudaMalloc(&(temp.xx),sizeof(float)*1024)!=cudaSuccess)printf("error allocating dist");
+        // Now in temp (on CPU), intialize dist pointer variable with cudaMalloc
+        // so dist points to a GPU address (but dist variable itself is on CPU)
+        if(cudaMalloc(&(temp.dist),sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
+
+        // Same now with the xx pointer inside temp
+        if(cudaMalloc(&(temp.xx),sizeof(float)*1024)!=cudaSuccess)printf("error allocating xx");
 
         //below statement will not work: not possible to dereference device pointer from host like head->dist
         //if(cudaMalloc(&(head->dist),sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
