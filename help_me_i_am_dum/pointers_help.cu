@@ -14,10 +14,10 @@ __global__ void check(int *dist, float *xx){
         printf(" check: %d %f\n",dist[0],xx[0]);
 }
 
-__global__ void check1( struct node *temp){
+__global__ void check1(struct node *temp){
         int *ptr1=temp->dist;
         float *ptr2=temp->xx;
-if(ptr1!=NULL &&ptr2!=NULL)     printf(" check: %d %f\n",ptr1[0],ptr2[0]);
+        if(ptr1!=NULL && ptr2!=NULL) printf(" check: %d %f\n",ptr1[0],ptr2[0]);
 }
 
 
@@ -38,26 +38,36 @@ int main(){
   
         // Now in temp (on CPU), intialize dist pointer variable with cudaMalloc
         // so dist points to a GPU address (but dist variable itself is on CPU)
-        if(cudaMalloc(&(temp.dist),sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
+        if(cudaMalloc(&(temp.dist), sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
 
         // Same now with the xx pointer inside temp
-        if(cudaMalloc(&(temp.xx),sizeof(float)*1024)!=cudaSuccess)printf("error allocating xx");
+        if(cudaMalloc(&(temp.xx), sizeof(float)*1024)!=cudaSuccess)printf("error allocating xx");
 
-        //below statement will not work: not possible to dereference device pointer from host like head->dist
-        //if(cudaMalloc(&(head->dist),sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
+        // Pointer variable "head" is on CPU, but dereferencing it -- *head (struct) is on GPU.
+        // GPU is not part of the CPU's normal addressable memory space, so you cannot just dereference a GPU address from the CPU
+        // head->dist is basically (*head).dist, so this *head dereference will not work
+        
+        //if(cudaMalloc(&(head->dist), sizeof(int)*1024)!=cudaSuccess)printf("error allocating dist");
 
-//copy the temp with dist and xx fields having device address to head
-        cudaMemcpy(head,&temp, sizeof(struct node),cudaMemcpyHostToDevice);
+        // What to do then to intialize the dist and xx pointers in GPU struct?
+        // Copy the dist and xx addresses from temp to the dist and xx addresses in head
+        // Now, the struct living on GPU, has dist and xx pointing to GPU adresses and not junk anymore
+        cudaMemcpy(head, &temp, sizeof(struct node),cudaMemcpyHostToDevice);
+        
         int var=1025;
         float tt=2.5;
         
-//copy one element to the zeroth position  of head->dist and head->xx on device/GPU
-        cudaMemcpy(temp.dist, &var,sizeof(int), cudaMemcpyHostToDevice);
-        cudaMemcpy(temp.xx, &tt,sizeof(float), cudaMemcpyHostToDevice);
+        // How to copy one element to the 0th position of (*head).dist and (*head).xx arrays on the GPU
+        // Again, cannot dereference head->dist directly so
+
+        // But see, now temp.dist is not dereferencing the address or anything, it just is a GPU address atp
+        // so Memcpy will copy from &var to the GPU address in temp.dist, no issues
+        cudaMemcpy(temp.dist, &var, sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(temp.xx, &tt, sizeof(float), cudaMemcpyHostToDevice);
         err=cudaGetLastError();
         check1<<<1,1>>>(head);
         cudaDeviceSynchronize();
         err=cudaGetLastError();
-        if(err!=cudaSuccess)printf("%s", cudaGetErrorString(err));
+        if(err!=cudaSuccess) printf("%s", cudaGetErrorString(err));
         return 0;
 }
